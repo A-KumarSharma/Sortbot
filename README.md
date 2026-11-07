@@ -26,6 +26,17 @@ In a second terminal (`source install/setup.bash` first), choose what to sort:
 ros2 topic pub --once /sorter/command std_msgs/msg/String "{data: ALL}"   # R, G, B, RG, ALL, STOP
 ```
 Check controllers: `ros2 control list_controllers` (all three should be `active`).
+
+## DEMO VIDEO
+
+
+https://github.com/user-attachments/assets/c267d536-bc7b-40c2-ab60-847f6f77ce44
+
+
+
+
+
+
 ## 3. File structure
 ```
 sortbot_ws/
