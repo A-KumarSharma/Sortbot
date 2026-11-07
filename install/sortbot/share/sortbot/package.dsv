@@ -1,0 +1,9 @@
+source;share/sortbot/hook/pythonpath.ps1
+source;share/sortbot/hook/pythonpath.dsv
+source;share/sortbot/hook/pythonpath.sh
+source;share/sortbot/hook/ament_prefix_path.ps1
+source;share/sortbot/hook/ament_prefix_path.dsv
+source;share/sortbot/hook/ament_prefix_path.sh
+source;../../build/sortbot/share/sortbot/hook/pythonpath_develop.ps1
+source;../../build/sortbot/share/sortbot/hook/pythonpath_develop.dsv
+source;../../build/sortbot/share/sortbot/hook/pythonpath_develop.sh

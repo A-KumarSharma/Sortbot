@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="sortbot">
+  <xacro:arg name="controllers_file" default=""/>
+  <xacro:property name="M" value="package://moveit_resources_panda_description/meshes/collision"/>
+
+  <xacro:macro name="part" params = "name mesh mass rpy:='0 0 0'">
+    <link name="${name}">
+      <visual><origin rpy="${rpy}"/><geometry><mesh filename="${M}/${mesh}.stl"/></geometry></visual>
+      <collision><origin rpy="${rpy}"/><geometry><mesh filename= "${M}/${mesh}.stl"/></geometry> </collision>
+      <inertial><mass value="${mass}"/><inertia ixx="${mass*0.005}" ixy="0" ixz="0" iyy="${mass*0.005}" iyz="0" izz="${mass*0.005}"/></inertial>
+    </link>
+
+  </xacro:macro>
+  <xacro:macro name="arm" params="n parent xyz rpy lo up effort vel">
+    <joint name="panda_joint${n}" type="revolute">
+      <parent link="${parent}"/><child link="panda_link${n}"/><origin xyz="${xyz}" rpy="${rpy}"/><axis xyz="0 0 1"/>
+      <limit lower="${lo}" upper="${up}" effort="${effort}" velocity="${vel}"/><dynamics damping="1.0"/>
+
+    </joint>
+  </xacro:macro>
+
+  <xacro:macro name="finger" params="n dir axis rpy">
+    <xacro:part name ="panda_${n}finger" mesh="finger" mass="0.03" rpy="${rpy}"/>
+    <joint name="panda_finger_joint${dir}" type="prismatic">
+      <parent link="panda_hand"/><child link="panda_${n}finger"/><origin xyz="0 0 0.0584"/>
+      <axis xyz="0 ${axis} 0"/><limit lower="0" upper="0.04" effort="40" velocity="0.2"/><dynamics damping="2.0"/>
+
+    </joint>
+    <gazebo reference="panda_${n}finger"><mu1>2.0</mu1><mu2>2.0</mu2></gazebo>
+
+  </xacro:macro>
+  <xacro:macro name="rc" params="name init">
+    <joint name="${name}"><command_interface name="position"/>
+      <state_interface name="position"><param name="initial_value">${init}</param></state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </xacro:macro>
+
+
+  <link name="world"/>
+  <joint name ="base" type="fixed"><parent link="world"/><child link="panda_link0"/></joint>
+  <xacro:part name="panda_link0" mesh="link0" mass="2.9"/>
+  <xacro:part name="panda_link1" mesh="link1" mass="2.7"/>
+  <xacro:part name="panda_link2" mesh="link2" mass="2.7"/>
+  <xacro:part name="panda_link3" mesh="link3" mass="2.4"/>
+  <xacro:part name="panda_link4" mesh="link4" mass="2.4"/>
+  <xacro:part name="panda_link5" mesh="link5" mass="1.2"/>
+  <xacro:part name="panda_link6" mesh="link6" mass="1.5"/>
+  <xacro:part name="panda_link7" mesh="link7" mass="0.7"/>
+  <xacro:arm n="1" parent="panda_link0" xyz="0 0 0.333"    rpy="0 0 0"         lo="-2.8973"   up="2.8973"  effort="87" vel="2.175"/>
+  <xacro:arm n="2" parent="panda_link1" xyz="0 0 0"        rpy="${-pi/2} 0 0"  lo="-1.7628"   up="1.7628"  effort="87" vel="2.175"/>
+  <xacro:arm n="3" parent="panda_link2" xyz="0 -0.316 0"   rpy="${pi/2} 0 0"   lo="-2.8973"   up="2.8973"  effort="87" vel="2.175"/>
+  <xacro:arm n="4" parent="panda_link3" xyz="0.0825 0 0"   rpy="${pi/2} 0 0"   lo="-3.0718"   up="-0.0698" effort="87" vel="2.175"/>
+  <xacro:arm n="5" parent="panda_link4" xyz="-0.0825 0.384 0" rpy="${-pi/2} 0 0" lo="-2.8973" up="2.8973"  effort="12" vel="2.61"/>
+  <xacro:arm n="6" parent="panda_link5" xyz="0 0 0"        rpy="${pi/2} 0 0"   lo="-0.0175"   up="3.7525"  effort="12" vel="2.61"/>
+  <xacro:arm n="7" parent="panda_link6" xyz="0.088 0 0"    rpy="${pi/2} 0 0"   lo="-2.8973"   up="2.8973"  effort="12" vel="2.61"/>
+
+  <xacro:part name="panda_hand" mesh="hand" mass="0.73"/>
+  <joint name="hand_joint" type="fixed"><parent link="panda_link7"/><child link="panda_hand"/><origin xyz="0 0 0.107" rpy="0 0 ${-pi/4}"/></joint>
+  <link name="panda_hand_tcp"/>
+  <joint name="tcp_joint" type="fixed"><parent link="panda_hand"/><child link="panda_hand_tcp"/><origin xyz="0 0 0.1034"/></joint>
+  <xacro:finger n="left" dir="1" axis="1" rpy="0 0 0"/>
+  <xacro:finger n="right" dir="2" axis="-1" rpy="0 0 ${pi}"/>
+
+
+  <ros2_control name="sim"  type="system">
+    <hardware><plugin>gz_ros2_control/GazeboSimSystem</plugin></hardware>
+    <xacro:rc name="panda_joint1" init="0" /><xacro:rc name="panda_joint2" init="-0.785"/>
+    <xacro:rc name="panda_joint3" init="0"/><xacro:rc name="panda_joint4" init="-2.356"/>
+    <xacro:rc name="panda_joint5" init="0"/><xacro:rc name="panda_joint6" init="1.571"/>
+    <xacro:rc name="panda_joint7" init="0.785"/>
+    <xacro:rc name="panda_finger_joint1" init="0.04"/><xacro:rc name="panda_finger_joint2" init="0.04"/>
+
+  </ros2_control>
+  <gazebo><plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+    <parameters>$(arg controllers_file)</parameters></plugin></gazebo>
+</robot>
+
+
+
